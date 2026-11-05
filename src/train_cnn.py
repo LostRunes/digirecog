@@ -7,7 +7,7 @@ from tensorflow.keras import layers, models, callbacks
 from data import load_mnist
 
 
-def build():
+def build(num_classes=10):
     return models.Sequential([
         layers.Input((28, 28, 1)),
         layers.RandomRotation(0.06), layers.RandomTranslation(0.08, 0.08), layers.RandomZoom(0.1),
@@ -18,7 +18,7 @@ def build():
         layers.Conv2D(64, 3, padding="same"), layers.BatchNormalization(), layers.Activation("relu"),
         layers.MaxPooling2D(), layers.Dropout(0.25),
         layers.Flatten(), layers.Dense(128, activation="relu"), layers.Dropout(0.4),
-        layers.Dense(10, activation="softmax"),
+        layers.Dense(num_classes, activation="softmax"),
     ], name="digit_cnn")
 
 

@@ -21,6 +21,10 @@ off = cm.copy(); np.fill_diagonal(off, 0)
 (ca, cb) = np.unravel_index(off.argmax(), off.shape)
 macro_f1 = rep["report"]["macro avg"]["f1-score"]
 svm = cl["SVM RBF (PCA-50)"]; best_classical = max(cl, key=lambda k: cl[k]["accuracy"])
+al = json.load(open(R + "alnum_report.json")); ah = json.load(open(R + "alnum_history.json"))
+a_acc, a_dig, a_let = al["accuracy"] * 100, al["digit_accuracy"] * 100, al["letter_accuracy"] * 100
+pairs = al["top_pairs"]
+pair_txt = ", ".join(f"{p['true']}\u2192{p['pred']}" for p in pairs[:4])
 
 def C(hex_): return RGBColor.from_string(hex_)
 BG, INK, BLUE, ORANGE, MUTED, CARD, LINE, PALE = "F7F4EE", "1F2A37", "2F5D7C", "C0623B", "5F6B7A", "FFFFFF", "D9D4C7", "E4ECF1"
@@ -28,7 +32,7 @@ HEAD, BODY = "Georgia", "Calibri"
 
 prs = Presentation(); prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
 blank = prs.slide_layouts[6]
-TOTAL = 12
+TOTAL = 13
 
 
 def bg(s, color=BG):
@@ -88,10 +92,10 @@ def card(s, x, y, w, h_, title=None, fill=CARD):
         text(s, x + 0.15, y + 0.1, w - 0.3, 0.4, title, size=15, bold=True, color=BLUE)
 
 
-def stat(s, x, y, w, big, small, color=BLUE):
+def stat(s, x, y, w, big, small, color=BLUE, size=30):
     rect(s, x, y, w, 1.35, fill=CARD)
     rect(s, x, y, 0.08, 1.35, fill=color, line=None)
-    text(s, x + 0.2, y + 0.08, w - 0.3, 0.7, big, size=30, font=HEAD, bold=True, color=color)
+    text(s, x + 0.2, y + 0.08, w - 0.3, 0.7, big, size=size, font=HEAD, bold=True, color=color)
     text(s, x + 0.2, y + 0.78, w - 0.3, 0.5, small, size=13, color=MUTED)
 
 
@@ -127,7 +131,7 @@ for i, d in enumerate(digits):
     text(s, cx, cy, 1.75, 1.1, d, size=44, font=HEAD, color="F7F4EE", align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 text(s, 0.8, 0.8, 7, 0.4, "MINI PROJECT  |  MACHINE LEARNING", size=13, bold=True, color="F0B79C")
 text(s, 0.8, 1.45, 7.5, 2.2, "Handwritten Digit Recognition Using Machine Learning", size=40, font=HEAD, bold=True, color="FFFFFF")
-text(s, 0.8, 3.65, 7.4, 0.9, "A CNN-based classifier benchmarked against Logistic Regression, Random Forest, k-NN and SVM on the MNIST dataset",
+text(s, 0.8, 3.65, 7.4, 0.9, "A CNN benchmarked against four classical ML models on MNIST digits, then extended to recognise letters A\u2013Z (36 classes) with EMNIST",
      size=16, color="D6E2EA")
 rect(s, 0.88, 4.7, 0.9, 0.05, fill=ORANGE, line=None)
 text(s, 0.8, 4.85, 4, 0.35, "PRESENTED BY", size=11.5, bold=True, color="F0B79C")
@@ -148,11 +152,11 @@ bullets(s, 0.85, 4.65, 5.6, 2.2, [
     "Build an end-to-end digit recognition pipeline",
     "Compare 4 classical ML models with a CNN",
     "Reach > 99% accuracy on unseen test data",
-    "Recognise digits drawn live by a user"], size=15.5, space=5)
-stat(s, 6.95, 1.75, 2.8, f"{acc:.2f}%", "CNN test accuracy", ORANGE)
-stat(s, 9.95, 1.75, 2.7, "70,000", "labelled images (MNIST)")
-stat(s, 6.95, 3.3, 2.8, "5 models", "compared on the same split")
-stat(s, 9.95, 3.3, 2.7, f"{errors}", "errors out of 10,000 tests", ORANGE)
+    "Extend to letters: recognise 0\u20139 and A\u2013Z live"], size=15.5, space=5)
+stat(s, 6.95, 1.75, 2.8, f"{acc:.2f}%", "digit accuracy (MNIST)", ORANGE)
+stat(s, 9.95, 1.75, 2.7, "250,000+", "images (MNIST + EMNIST)")
+stat(s, 6.95, 3.3, 2.8, f"{a_acc:.1f}%", "digits + letters (36 classes)")
+stat(s, 9.95, 3.3, 2.7, f"{errors}", "digit errors out of 10,000", ORANGE)
 card(s, 6.95, 4.85, 5.7, 1.95, "Why it matters")
 text(s, 7.1, 5.25, 5.4, 1.5, "Digit recognition powers cheque processing, postal PIN-code sorting, form digitisation and exam-sheet scanning. "
      "It is also the standard benchmark for testing image-classification ideas.", size=14.5)
@@ -164,7 +168,7 @@ card(s, 0.7, 1.75, 6.2, 2.15, "MNIST Dataset")
 bullets(s, 0.85, 2.15, 5.95, 1.8, [
     "70,000 grayscale images, 28 × 28 pixels, 10 classes",
     "Split: 55,000 train  |  5,000 validation  |  10,000 test",
-    "Fairly balanced classes (about 5,000–6,200 per digit)",
+    "Letters extension uses EMNIST (36 classes) \u2013 see slide 9",
     "Test set is never used during training or tuning"], size=14.5, space=4)
 card(s, 0.7, 4.1, 6.2, 2.75, "Sample Images")
 pic(s, "samples.png", 0.85, 4.65, w=5.9)
@@ -186,8 +190,8 @@ s = prs.slides.add_slide(blank); header(s, "Proposed System Architecture", 4, "A
 # Training pipeline
 rect(s, 0.7, 1.7, 11.95, 2.2, fill=PALE, line=None)
 text(s, 0.85, 1.75, 6, 0.35, "A.  TRAINING PHASE (offline)", size=12.5, bold=True, color=BLUE)
-tr = [("MNIST Dataset", "70,000 images"), ("Preprocessing", "normalise, 55k/5k/10k split"), ("Augmentation", "rotate, shift, zoom"),
-      ("CNN Training", "Adam, early stopping"), ("Trained Model", "saved as cnn.keras")]
+tr = [("MNIST + EMNIST", "digits and letters"), ("Preprocessing", "normalise, 55k/5k/10k split"), ("Augmentation", "rotate, shift, zoom"),
+      ("CNN Training", "Adam, early stopping"), ("Trained Models", "digit CNN + 36-class CNN")]
 bw, gap = 1.95, 0.46
 for i, (t, d) in enumerate(tr):
     x = 0.9 + i * (bw + gap)
@@ -196,8 +200,8 @@ for i, (t, d) in enumerate(tr):
 # Inference pipeline
 rect(s, 0.7, 4.05, 11.95, 2.2, fill="F3E5DD", line=None)
 text(s, 0.85, 4.1, 6, 0.35, "B.  RECOGNITION PHASE (live)", size=12.5, bold=True, color=ORANGE)
-inf = [("User Input", "drawn on canvas / image file"), ("Image Preparation", "invert, threshold, crop, centre"), ("28×28 Image", "MNIST-style input"),
-       ("Trained CNN", "feature extraction + classify"), ("Predicted Digit", "with confidence %")]
+inf = [("User Input", "digit or letter, drawn / image"), ("Image Preparation", "invert, threshold, crop, centre"), ("28×28 Image", "MNIST-style input"),
+       ("Trained CNN", "classifies 0\u20139 and A\u2013Z"), ("Predicted Character", "digit or letter + confidence")]
 for i, (t, d) in enumerate(inf):
     x = 0.9 + i * (bw + gap)
     flow_box(s, x, 4.55, bw, 1.45, t, d, fill=ORANGE if i == 3 else CARD, tcolor="FFFFFF" if i == 3 else INK, line=None if i == 3 else LINE)
@@ -206,7 +210,7 @@ for i, (t, d) in enumerate(inf):
 a = rect(s, 8.94, 3.62, 0.32, 0.5, fill=MUTED, line=None, shape=MSO_SHAPE.DOWN_ARROW)
 text(s, 9.3, 3.68, 3, 0.35, "same weights reused", size=11.5, color=MUTED)
 text(s, 0.7, 6.4, 11.95, 0.55, [[("Evaluation: ", {"bold": True, "color": BLUE}),
-     "the 10,000 held-out test images are used to compare the CNN with 4 classical baselines (accuracy, F1, confusion matrix)."]], size=14)
+     "held-out test sets (10,000 MNIST and 35,526 EMNIST images) measure accuracy, F1 and confusion matrices; the digit CNN is also compared with 4 classical baselines."]], size=14)
 notes(s, "Top row = how the model is built. Bottom row = how a new digit is recognised. The CNN weights from training are reused.")
 
 # ---------------------------------------------------------------- 5 Methodology
@@ -244,15 +248,15 @@ s = prs.slides.add_slide(blank); header(s, "Model Development & Implementation",
 text(s, 0.7, 1.65, 8, 0.35, "CNN layer structure", size=15, bold=True, color=BLUE)
 layers = [("Input", "28×28×1", PALE), ("Conv 3×3 × 2", "32 filters, BN, ReLU", CARD), ("MaxPool + Dropout", "0.25", CARD),
           ("Conv 3×3 × 2", "64 filters, BN, ReLU", CARD), ("MaxPool + Dropout", "0.25", CARD),
-          ("Dense", "128 units, Dropout 0.4", CARD), ("Softmax", "10 classes", "F3E5DD")]
+          ("Dense", "128 units, Dropout 0.4", CARD), ("Softmax", "10 or 36 classes", "F3E5DD")]
 lw = 1.5
 for i, (t, d, f) in enumerate(layers):
     x = 0.7 + i * 1.68
     flow_box(s, x, 2.05, lw, 1.25, t, d, fill=f)
     if i < 6: arrow(s, x + lw + 0.0, 2.55, 0.17)
 card(s, 0.7, 3.6, 5.85, 3.25, "Hyper-parameters")
-rows = [("Optimiser", "Adam (lr 0.001, halves on plateau)"), ("Batch size", "128"), ("Epochs", f"max 30, ran {epochs} (early stop)"),
-        ("Parameters", f"{h['params']:,}"), ("Augmentation", "rotation, shift, zoom"), ("Random seed", "42 (reproducible)")]
+rows = [("Optimiser", "Adam (lr 0.001, halves on plateau)"), ("Batch size", "128"), ("Epochs", f"digits {epochs} (max 30), letters {len(ah['loss'])} (max 12)"),
+        ("Parameters", f"{h['params']:,} / {ah['params']:,} (36-class)"), ("Augmentation", "rotation, shift, zoom"), ("Random seed", "42 (reproducible)")]
 for i, (k, v) in enumerate(rows):
     y = 4.1 + i * 0.44
     text(s, 0.85, y, 1.9, 0.4, k, size=13.5, bold=True, color=MUTED)
@@ -263,7 +267,7 @@ bullets(s, 6.95, 4.05, 5.6, 2.8, [
     [("OpenCV, SciPy", {"bold": True}), "  –  image preparation"],
     [("Matplotlib, Seaborn", {"bold": True}), "  –  result plots"],
     [("Tkinter", {"bold": True}), "  –  drawing-pad application"],
-    "Modules: data.py, preprocess.py, train_classical.py, train_cnn.py, evaluate.py, app.py"], size=13.5, space=4)
+    "Modules: data.py, preprocess.py, prepare_emnist.py, train_cnn.py, train_alnum.py, app.py"], size=13.5, space=4)
 notes(s, "Describe the layers and the hyper-parameters.")
 
 # ---------------------------------------------------------------- 7 Results comparison
@@ -298,12 +302,33 @@ text(s, 7.7, 5.95, 4.85, 0.9, [[("Result: ", {"bold": True, "color": ORANGE}), f
      size=14, anchor=MSO_ANCHOR.MIDDLE)
 notes(s, "Convergence, confusion matrix and where the model fails.")
 
-# ---------------------------------------------------------------- 9 Application
-s = prs.slides.add_slide(blank); header(s, "Application", 9, "Application")
+
+# ---------------------------------------------------------------- 9 Letters extension
+s = prs.slides.add_slide(blank); header(s, "Extension: Recognising Letters (EMNIST)", 9, "Digits + letters")
+card(s, 0.7, 1.75, 5.9, 2.35, "EMNIST dataset (NIST Special Database 19)")
+bullets(s, 0.85, 2.15, 5.65, 1.95, [
+    f"36 classes: digits 0\u20139 and letters A\u2013Z",
+    f"{ah['n_train']+ah['n_val']:,} training and {ah['n_test']:,} test images (28\u00D728)",
+    "Upper and lower case merged (a = A) because shapes overlap",
+    "Balanced: at most 5,000 training images per class"], size=13.5, space=3)
+card(s, 0.7, 4.25, 5.9, 2.6, "Sample images (two per class)")
+pic(s, "emnist_samples.png", 0.8, 4.75, w=5.7)
+stat(s, 6.85, 1.75, 1.85, f"{a_acc:.2f}%", "all 36 classes", ORANGE, size=24)
+stat(s, 8.78, 1.75, 1.85, f"{a_dig:.2f}%", "digits only", BLUE, size=24)
+stat(s, 10.71, 1.75, 1.94, f"{a_let:.2f}%", "letters only", ORANGE, size=24)
+pic(s, "alnum_f1.png", 6.85, 3.25, w=5.8)
+text(s, 6.85, 5.28, 5.8, 0.3, "F1-score per class (blue = digits, orange = letters)", size=11.5, color=MUTED)
+card(s, 6.85, 5.6, 5.8, 1.25, "Where it struggles")
+text(s, 7.0, 5.95, 5.55, 0.9, f"Look-alike pairs cause most errors (true\u2192predicted): {pair_txt}. "
+     f"Digit\u2194letter mix-ups: {al['digit_letter_confusions']} of {al['errors']:,} errors.", size=12.5)
+notes(s, "Same CNN design with a 36-way softmax, trained on EMNIST. Accuracy is lower than digits-only because O/0, I/1, S/5, Z/2 look the same.")
+
+# ---------------------------------------------------------------- 10 Application
+s = prs.slides.add_slide(blank); header(s, "Application", 10, "Application")
 card(s, 0.7, 1.75, 5.9, 5.1, "Live Drawing-Pad Application (app.py)")
-for i, t in enumerate(["Draw any digit with the mouse on the black canvas",
+for i, t in enumerate(["Draw any digit or letter with the mouse on the black canvas",
                        "On release, the stroke image is converted to MNIST format by preprocess.py",
-                       "The trained CNN predicts the digit instantly",
+                       "The CNN predicts instantly; a switch picks digits-only (99.3%) or digits + letters",
                        "Top-3 probabilities are displayed as confidence bars",
                        "Clear and try again; also available as predict.py for image files"]):
     y = 2.3 + i * 0.88
@@ -319,32 +344,32 @@ text(s, 7.0, 5.45, 5.5, 1.4, f"The model is only {h['params']/1e3:.0f}k paramete
 notes(s, "Demonstrate app.py live if possible.")
 
 # ---------------------------------------------------------------- 10 Conclusion
-s = prs.slides.add_slide(blank); header(s, "Conclusion", 10, "Summary")
-stat(s, 0.7, 1.75, 3.8, f"{acc:.2f}%", "CNN accuracy on 10,000 unseen digits", ORANGE)
-stat(s, 4.75, 1.75, 3.8, f"{(acc-cl[best_classical]['accuracy']*100):+.2f} pts", f"gain over best classical model", BLUE)
-stat(s, 8.8, 1.75, 3.85, f"{errors}", "total misclassified test images", ORANGE)
+s = prs.slides.add_slide(blank); header(s, "Conclusion", 11, "Summary")
+stat(s, 0.7, 1.75, 3.8, f"{acc:.2f}%", "digit accuracy (10,000 unseen MNIST images)", ORANGE)
+stat(s, 4.75, 1.75, 3.8, f"{a_acc:.2f}%", "accuracy on 36 classes (digits + letters)", BLUE)
+stat(s, 8.8, 1.75, 3.85, f"{(acc-cl[best_classical]['accuracy']*100):+.2f} pts", "digit CNN gain over best classical (SVM)", ORANGE)
 card(s, 0.7, 3.4, 11.95, 3.45, "Key takeaways")
 bullets(s, 0.85, 3.85, 11.7, 3.0, [
     "A complete pipeline was built: data preparation, five trained models, evaluation and a working drawing application.",
     f"The CNN with BatchNorm, Dropout and augmentation outperformed every classical model, reaching {acc:.2f}% test accuracy.",
     "Careful preprocessing (centring and scaling) is what makes the model work on digits drawn by real users, not only on MNIST.",
-    "Validation-based early stopping and a held-out test set give an honest, reproducible estimate of performance.",
+    f"Extended to 36 classes with EMNIST: {a_dig:.1f}% on digits and {a_let:.1f}% on letters; remaining errors are mostly look-alikes ({pair_txt}).",
     "The project shows that deep learning is the most effective approach for image-based recognition tasks."], size=15, space=7)
 notes(s, "Summarise results and learning outcomes.")
 
 # ---------------------------------------------------------------- 11 Limitations & future
-s = prs.slides.add_slide(blank); header(s, "Limitations & Future Scope", 11, "Next steps")
+s = prs.slides.add_slide(blank); header(s, "Limitations & Future Scope", 12, "Next steps")
 card(s, 0.7, 1.75, 5.85, 5.1, "Limitations")
 bullets(s, 0.85, 2.2, 5.6, 4.6, [
-    "Trained only on clean, single, centred digits – multi-digit numbers need segmentation",
+    "Trained on clean, single, centred characters \u2013 words and multi-digit numbers need segmentation",
     "MNIST writers are mostly American; other writing styles (e.g. regional digit shapes) may reduce accuracy",
     "Very thin strokes, heavy noise or unusual backgrounds hurt prediction",
-    "Ambiguous digits (such as 4/9 and 7/1) still cause the remaining errors",
-    "Only digits 0–9; letters and symbols are not supported"], size=14.5, space=7)
+    f"Look-alike characters ({pair_txt}) cause most errors, even for humans",
+    "Upper and lower case are merged (a = A); symbols and punctuation are not supported"], size=14.5, space=7)
 card(s, 6.8, 1.75, 5.85, 5.1, "Future Scope")
 bullets(s, 6.95, 2.2, 5.6, 4.6, [
-    "Extend to EMNIST letters and Devanagari / Bengali digits",
-    "Add digit segmentation to read full numbers and cheques",
+    "Case-sensitive recognition (62 classes) and Devanagari / Bengali digits",
+    "Add character segmentation to read words, numbers and cheques",
     "Ensemble of several CNNs or a ResNet for even lower error",
     "Mobile / web deployment with TensorFlow Lite or TensorFlow.js",
     "Collect user drawings to fine-tune the model for real handwriting"], size=14.5, space=7)

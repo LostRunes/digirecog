@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 models/svm.joblib
 results/*_log.txt
+data/
+results/*_err.txt
