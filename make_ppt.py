@@ -183,7 +183,7 @@ card(s, 7.15, 1.75, 5.5, 5.1, "Preprocessing Steps")
 steps = [("1", "Normalise", "pixels 0–255 scaled to 0–1"),
          ("2", "Reshape", "28×28×1 tensor for CNN; flattened 784 vector for classical models"),
          ("3", "Dimensionality reduction", "PCA to 50 components for k-NN and SVM"),
-         ("4", "Augmentation", "random rotation ±6°, shift 8%, zoom 10% (training only)"),
+         ("4", "Augmentation", "random rotation ±22°, shift 8%, zoom 10% (training only)"),
          ("5", "Real-input conversion", "invert, Otsu threshold, crop, resize to 20×20, centre in 28×28 by centre of mass")]
 for i, (n, t, d) in enumerate(steps):
     y = 2.3 + i * 0.88
