@@ -1,0 +1,30 @@
+{
+  "Logistic Regression": {
+    "accuracy": 0.9214,
+    "macro_f1": 0.9202777599786778,
+    "train_s": 22.976542472839355,
+    "infer_s": 0.10405588150024414,
+    "val_accuracy": 0.9212
+  },
+  "Random Forest": {
+    "accuracy": 0.9691,
+    "macro_f1": 0.9688392830650876,
+    "train_s": 13.854231595993042,
+    "infer_s": 0.23295283317565918,
+    "val_accuracy": 0.9718
+  },
+  "k-NN (k=3, PCA-50)": {
+    "accuracy": 0.9762,
+    "macro_f1": 0.9759792846105906,
+    "train_s": 0.6152026653289795,
+    "infer_s": 3.341613292694092,
+    "val_accuracy": 0.9792
+  },
+  "SVM RBF (PCA-50)": {
+    "accuracy": 0.9861,
+    "macro_f1": 0.9860192245592314,
+    "train_s": 35.03302192687988,
+    "infer_s": 10.82065224647522,
+    "val_accuracy": 0.9866
+  }
+}
