@@ -1,11 +1,13 @@
 """Create figures + metrics from saved results (confusion matrix, curves, errors...)."""
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 import json, numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt, seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
 from data import load_mnist
 
-R = "../results/"
+R = os.path.join(ROOT, "results") + os.sep
 (_, ytr), _, (xte, yte) = load_mnist()
 probs = np.load(R + "cnn_test_probs.npy"); pred = probs.argmax(1)
 h = json.load(open(R + "cnn_history.json")); cl = json.load(open(R + "classical_results.json"))

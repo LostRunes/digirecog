@@ -1,4 +1,6 @@
 """Baseline classical ML models. Saves results/classical_results.json."""
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 import json, time, joblib
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -27,5 +29,5 @@ for name, m in models.items():
                      train_s=tt, infer_s=ti, val_accuracy=accuracy_score(yva, m.predict(xva)))
     print(f"{name:22s} test acc {out[name]['accuracy']:.4f}  train {tt:.0f}s", flush=True)
     if name.startswith("SVM"):
-        joblib.dump(m, "../models/svm.joblib")
-json.dump(out, open("../results/classical_results.json", "w"), indent=2)
+        joblib.dump(m, os.path.join(ROOT, "models", "svm.joblib"))
+json.dump(out, open(os.path.join(ROOT, "results", "classical_results.json"), "w"), indent=2)

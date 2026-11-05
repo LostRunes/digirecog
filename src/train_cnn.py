@@ -1,4 +1,6 @@
 """Train the CNN with on-the-fly augmentation. Saves model, history and test predictions."""
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 import json, numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models, callbacks
@@ -32,8 +34,8 @@ if __name__ == "__main__":
     h = m.fit(xtr, ytr, validation_data=(xva, yva), epochs=30, batch_size=128, callbacks=cb, verbose=2)
     loss, acc = m.evaluate(xte, yte, verbose=0)
     print(f"TEST accuracy: {acc:.4f}")
-    m.save("../models/cnn.keras")
-    np.save("../results/cnn_test_probs.npy", m.predict(xte, verbose=0))
+    m.save(os.path.join(ROOT, "models", "cnn.keras"))
+    np.save(os.path.join(ROOT, "results", "cnn_test_probs.npy"), m.predict(xte, verbose=0))
     hist = {k: [float(v) for v in vs] for k, vs in h.history.items()}
     hist.update(test_acc=float(acc), test_loss=float(loss), params=int(m.count_params()))
-    json.dump(hist, open("../results/cnn_history.json", "w"))
+    json.dump(hist, open(os.path.join(ROOT, "results", "cnn_history.json"), "w"))

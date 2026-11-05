@@ -21,10 +21,13 @@ make_ppt.py              builds the presentation
 ## Run
 ```
 pip install -r requirements.txt
-cd src
-python train_classical.py
-python train_cnn.py
-python evaluate.py
-python app.py                 # draw digits
-python predict.py my_digit.png
+python src/app.py                    # draw digits (uses the saved models/cnn.keras)
+python src/predict.py my_digit.png   # predict from an image file
+
+# optional: retrain from scratch (CNN takes ~25 min on CPU)
+python src/train_classical.py
+python src/train_cnn.py
+python src/evaluate.py
+python make_ppt.py
 ```
+Scripts work from any folder. `models/cnn.keras` is included, so the app runs without retraining.

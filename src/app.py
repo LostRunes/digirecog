@@ -1,10 +1,12 @@
 """Draw a digit with the mouse and get a live prediction (Tkinter)."""
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 import numpy as np, tkinter as tk
 from PIL import Image, ImageDraw
 from tensorflow.keras.models import load_model
 from preprocess import to_mnist
 
-model = load_model("../models/cnn.keras")
+model = load_model(os.path.join(ROOT, "models", "cnn.keras"))
 S = 280
 root = tk.Tk(); root.title("Handwritten Digit Recognition")
 cv = tk.Canvas(root, width=S, height=S, bg="black", cursor="cross"); cv.grid(row=0, column=0, columnspan=2)
